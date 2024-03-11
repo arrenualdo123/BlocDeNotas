@@ -5,8 +5,18 @@
 package editortexto;
 
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.Desktop;
+import java.awt.Graphics;
 import java.awt.print.PageFormat;
+import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.BufferedReader;
@@ -15,23 +25,42 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.AbstractButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import javax.swing.undo.UndoManager;
 
 /**
  *
  * @author 2B
  */
-public class Editor extends javax.swing.JFrame {
+public class Editor extends javax.swing.JFrame implements Printable{
 
     String titulo;
     File archivoGuardado;
     private UndoManager undoManager;
+    private float zoomFactor = 1.0f; //Factor de zoom predeterminado
+    private JCheckBoxMenuItem zoomInMenuItem;
+    private JCheckBoxMenuItem zoomOutMenuItem;
+    private JCheckBoxMenuItem barraEstadoMenuItem;
+    private boolean mostrarBarraEstado = true;
+    private int lastIndex = 0;
 
     /**
      * Creates new form Editor
@@ -65,13 +94,13 @@ public class Editor extends javax.swing.JFrame {
         AjusteLinea.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
         Deshacer.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
         undoManager = new UndoManager();
@@ -80,6 +109,57 @@ public class Editor extends javax.swing.JFrame {
                 undoManager.addEdit(evt.getEdit());
             }
         });
+        jTextArea1.setComponentPopupMenu(createPopupMenu());
+
+        zoomInMenuItem = new JCheckBoxMenuItem("Zoom In");
+        zoomOutMenuItem = new JCheckBoxMenuItem("Zoom Out");
+        barraEstadoMenuItem = new JCheckBoxMenuItem("Barra de Estado");
+
+        zoomInMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Lógica para aumentar el zoom
+                zoomFactor *= 1.2f;
+
+            }
+        });
+        zoomOutMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Lógica para disminuir el zoom
+                zoomFactor /= 1.2f;
+
+            }
+        });
+        barraEstadoMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Lógica para mostrar/ocultar la barra de estado
+                // Verificar si el estado del menú ha cambiado
+                if (((AbstractButton) e.getSource()).isSelected()) {
+                    // Lógica para mostrar la barra de estado
+                    mostrarBarraEstado = true;
+                    actualizarVista();
+                } else {
+                    // Lógica para ocultar la barra de estado
+                    mostrarBarraEstado = false;
+                    actualizarVista();
+                }
+            }
+        });
+
+        // Crear el menú Zoom y agregar elementos
+        JMenu zoomMenu = new JMenu("Zoom");
+        zoomMenu.add(zoomInMenuItem);
+        zoomMenu.add(zoomOutMenuItem);
+
+// Crear el menú Ver y agregar elementos
+        JMenu verMenu = new JMenu("Ver");
+        verMenu.add(zoomMenu);
+        verMenu.add(barraEstadoMenuItem);
+
+// Agregar el menú Ver a tu barra de menú
+        mnuView.add(verMenu);
     }
 
     // Método para aplicar la fuente al JTextArea
@@ -92,6 +172,23 @@ public class Editor extends javax.swing.JFrame {
 
     public JTextArea getJTextArea() {
         return jTextArea1;
+    }
+
+    private void actualizarVista() {
+        // Configurar la visibilidad de la barra de estado
+        barraEstadoMenuItem.setVisible(mostrarBarraEstado);
+
+        // Configurar el zoom
+        if (zoomFactor != 1.0f) {
+            // Aplicar el zoom al JTextArea
+            jTextArea1.setFont(jTextArea1.getFont().deriveFont(zoomFactor * jTextArea1.getFont().getSize()));
+        }
+
+        // Otras actualizaciones de la interfaz según sea necesario
+        // ...
+        // Repintar la interfaz para reflejar los cambios
+        revalidate();
+        repaint();
     }
 
     /**
@@ -125,26 +222,24 @@ public class Editor extends javax.swing.JFrame {
         Pegar = new javax.swing.JMenuItem();
         Eliminar = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem14 = new javax.swing.JMenuItem();
-        jMenuItem15 = new javax.swing.JMenuItem();
-        jMenuItem16 = new javax.swing.JMenuItem();
-        jMenuItem17 = new javax.swing.JMenuItem();
-        jMenuItem18 = new javax.swing.JMenuItem();
-        jMenuItem19 = new javax.swing.JMenuItem();
+        Bing = new javax.swing.JMenuItem();
+        Buscar = new javax.swing.JMenuItem();
+        BuscarNext = new javax.swing.JMenuItem();
+        BuscarLast = new javax.swing.JMenuItem();
+        Reemplazar = new javax.swing.JMenuItem();
+        IrA = new javax.swing.JMenuItem();
         jSeparator5 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem20 = new javax.swing.JMenuItem();
-        jMenuItem21 = new javax.swing.JMenuItem();
+        SelectAll = new javax.swing.JMenuItem();
+        Date = new javax.swing.JMenuItem();
         mnuFormat = new javax.swing.JMenu();
         AjusteLinea = new javax.swing.JMenuItem();
         Fuente = new javax.swing.JMenuItem();
         mnuView = new javax.swing.JMenu();
-        jMenuItem4 = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem1 = new javax.swing.JCheckBoxMenuItem();
         mnuHelp = new javax.swing.JMenu();
-        jMenuItem22 = new javax.swing.JMenuItem();
-        jMenuItem23 = new javax.swing.JMenuItem();
+        Ayuda = new javax.swing.JMenuItem();
+        SendComents = new javax.swing.JMenuItem();
         jSeparator6 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem24 = new javax.swing.JMenuItem();
+        AcercaDe = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -245,10 +340,20 @@ public class Editor extends javax.swing.JFrame {
 
         Copiar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         Copiar.setText("Copiar");
+        Copiar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CopiarActionPerformed(evt);
+            }
+        });
         mnuEdit.add(Copiar);
 
         Cortar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         Cortar.setText("Cortar");
+        Cortar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CortarActionPerformed(evt);
+            }
+        });
         mnuEdit.add(Cortar);
 
         Pegar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_DOWN_MASK));
@@ -262,41 +367,86 @@ public class Editor extends javax.swing.JFrame {
 
         Eliminar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_DELETE, 0));
         Eliminar.setText("Eliminar");
+        Eliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                EliminarActionPerformed(evt);
+            }
+        });
         mnuEdit.add(Eliminar);
         mnuEdit.add(jSeparator4);
 
-        jMenuItem14.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem14.setText("Busqueda con bing...");
-        mnuEdit.add(jMenuItem14);
+        Bing.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        Bing.setText("Busqueda con bing...");
+        Bing.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BingActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(Bing);
 
-        jMenuItem15.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem15.setText("Buscar");
-        mnuEdit.add(jMenuItem15);
+        Buscar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        Buscar.setText("Buscar");
+        Buscar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BuscarActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(Buscar);
 
-        jMenuItem16.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F3, 0));
-        jMenuItem16.setText("Buscar siguiente");
-        mnuEdit.add(jMenuItem16);
+        BuscarNext.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F3, 0));
+        BuscarNext.setText("Buscar siguiente");
+        BuscarNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BuscarNextActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(BuscarNext);
 
-        jMenuItem17.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F3, java.awt.event.InputEvent.SHIFT_DOWN_MASK));
-        jMenuItem17.setText("Buscar anterior");
-        mnuEdit.add(jMenuItem17);
+        BuscarLast.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F3, java.awt.event.InputEvent.SHIFT_DOWN_MASK));
+        BuscarLast.setText("Buscar anterior");
+        BuscarLast.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BuscarLastActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(BuscarLast);
 
-        jMenuItem18.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem18.setText("Reemplazar");
-        mnuEdit.add(jMenuItem18);
+        Reemplazar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        Reemplazar.setText("Reemplazar");
+        Reemplazar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ReemplazarActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(Reemplazar);
 
-        jMenuItem19.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem19.setText("Ir a...");
-        mnuEdit.add(jMenuItem19);
+        IrA.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        IrA.setText("Ir a...");
+        IrA.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                IrAActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(IrA);
         mnuEdit.add(jSeparator5);
 
-        jMenuItem20.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, java.awt.event.InputEvent.CTRL_DOWN_MASK));
-        jMenuItem20.setText("Seleccionar todo");
-        mnuEdit.add(jMenuItem20);
+        SelectAll.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        SelectAll.setText("Seleccionar todo");
+        SelectAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SelectAllActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(SelectAll);
 
-        jMenuItem21.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0));
-        jMenuItem21.setText("Hora y fecha");
-        mnuEdit.add(jMenuItem21);
+        Date.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0));
+        Date.setText("Hora y fecha");
+        Date.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DateActionPerformed(evt);
+            }
+        });
+        mnuEdit.add(Date);
 
         jMenuBar1.add(mnuEdit);
 
@@ -321,32 +471,34 @@ public class Editor extends javax.swing.JFrame {
         jMenuBar1.add(mnuFormat);
 
         mnuView.setText("Ver");
-
-        jMenuItem4.setText("Zoom");
-        mnuView.add(jMenuItem4);
-
-        jCheckBoxMenuItem1.setSelected(true);
-        jCheckBoxMenuItem1.setText("Barra de estado");
-        mnuView.add(jCheckBoxMenuItem1);
-
         jMenuBar1.add(mnuView);
 
         mnuHelp.setText("Ayuda");
 
-        jMenuItem22.setText("Ver la ayuda");
-        jMenuItem22.addActionListener(new java.awt.event.ActionListener() {
+        Ayuda.setText("Ver la ayuda");
+        Ayuda.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem22ActionPerformed(evt);
+                AyudaActionPerformed(evt);
             }
         });
-        mnuHelp.add(jMenuItem22);
+        mnuHelp.add(Ayuda);
 
-        jMenuItem23.setText("Enviar comentarios");
-        mnuHelp.add(jMenuItem23);
+        SendComents.setText("Enviar comentarios");
+        SendComents.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SendComentsActionPerformed(evt);
+            }
+        });
+        mnuHelp.add(SendComents);
         mnuHelp.add(jSeparator6);
 
-        jMenuItem24.setText("Acerca del bloc de notas");
-        mnuHelp.add(jMenuItem24);
+        AcercaDe.setText("Acerca del bloc de notas");
+        AcercaDe.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AcercaDeActionPerformed(evt);
+            }
+        });
+        mnuHelp.add(AcercaDe);
 
         jMenuBar1.add(mnuHelp);
 
@@ -367,7 +519,14 @@ public class Editor extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void PegarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_PegarActionPerformed
-        // TODO add your handling code here:
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        Transferable contents = clipboard.getContents(this);
+        String textoPegado;
+        try {
+            textoPegado = (String) contents.getTransferData(DataFlavor.stringFlavor);
+            jTextArea1.replaceSelection(textoPegado);
+        } catch (UnsupportedFlavorException | IOException e) {
+        }
     }//GEN-LAST:event_PegarActionPerformed
 
     private void NuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NuevoActionPerformed
@@ -427,9 +586,16 @@ public class Editor extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_AbrirActionPerformed
 
-    private void jMenuItem22ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem22ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jMenuItem22ActionPerformed
+    private void AyudaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AyudaActionPerformed
+        // Abre el navegador web con la página de ayuda
+        try {
+            URI uri = new URI("https://www.bing.com/search"); // Reemplaza con la URL de tu página de ayuda
+            Desktop.getDesktop().browse(uri);
+        } catch (IOException | URISyntaxException ex) {
+            // Maneja cualquier excepción que pueda ocurrir al intentar abrir el navegador web
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_AyudaActionPerformed
 
     private void GuardarComoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GuardarComoActionPerformed
         // TODO add your handling code here:
@@ -498,15 +664,11 @@ public class Editor extends javax.swing.JFrame {
     }//GEN-LAST:event_ConfigPageActionPerformed
 
     private void ImprimirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ImprimirActionPerformed
-        PrinterJob trabajoImpresion = PrinterJob.getPrinterJob();
-        if (trabajoImpresion.printDialog()) {
-            try {
-                trabajoImpresion.print();
-            } catch (PrinterException ex) {
-                ex.printStackTrace();
-            }
-        }
+
+        PrinterJob job = PrinterJob.getPrinterJob();
+        
     }//GEN-LAST:event_ImprimirActionPerformed
+
 
     private void ExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExitActionPerformed
         this.dispose();
@@ -521,6 +683,165 @@ public class Editor extends javax.swing.JFrame {
 
     }//GEN-LAST:event_FuenteActionPerformed
 
+    private void DeshacerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DeshacerActionPerformed
+        if (undoManager.canUndo()) {
+            undoManager.undo();
+        }
+    }//GEN-LAST:event_DeshacerActionPerformed
+
+    private void CopiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CopiarActionPerformed
+        String seleccion = jTextArea1.getSelectedText();
+        if (seleccion != null) {
+            StringSelection seleccionClipboard = new StringSelection(seleccion);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(seleccionClipboard, null);
+        }
+    }//GEN-LAST:event_CopiarActionPerformed
+
+    private void CortarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CortarActionPerformed
+        CopiarActionPerformed(evt);  // Primero copia la selección al portapapeles
+        jTextArea1.replaceSelection("");  // Luego elimina la selección
+    }//GEN-LAST:event_CortarActionPerformed
+
+    private void EliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EliminarActionPerformed
+        jTextArea1.replaceSelection("");  // Simplemente elimina la selección
+    }//GEN-LAST:event_EliminarActionPerformed
+
+    private void BingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BingActionPerformed
+
+        // Obtén el texto seleccionado en el bloc de notas (reemplaza "text" con tu componente de texto real)
+        String selectedText = jTextArea1.getSelectedText();
+
+        if (selectedText != null && !selectedText.isEmpty()) {
+            // Realiza la búsqueda en Bing con el texto seleccionado
+            try {
+                String encodedQuery = URLEncoder.encode(selectedText, "UTF-8");
+                String bingSearchUrl = "https://www.bing.com/search?q=" + encodedQuery;
+
+                // Abre el navegador web con la búsqueda en Bing
+                Desktop.getDesktop().browse(new URI(bingSearchUrl));
+            } catch (IOException | URISyntaxException ex) {
+                // Maneja cualquier excepción que pueda ocurrir al intentar abrir el navegador web
+                ex.printStackTrace();
+            }
+        } else {
+            // Mensaje o lógica adicional si no hay texto seleccionado
+        }
+    }//GEN-LAST:event_BingActionPerformed
+
+    private void BuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarActionPerformed
+
+    }//GEN-LAST:event_BuscarActionPerformed
+
+    private void DateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DateActionPerformed
+        Date now = new Date();//hora y fecha actual
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss   yyyy/MM/dd");//foramto
+
+        String formatteDate = dateFormat.format(now);//farmato en cadena
+
+        jTextArea1.append(formatteDate + "\n");
+    }//GEN-LAST:event_DateActionPerformed
+
+    private void SelectAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SelectAllActionPerformed
+        jTextArea1.selectAll();
+    }//GEN-LAST:event_SelectAllActionPerformed
+
+    private void IrAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IrAActionPerformed
+        JTextArea jTextArea1 = new JTextArea();
+
+        // Puedes abrir un cuadro de diálogo para que el usuario ingrese la línea a la que quiere ir.
+        String input = JOptionPane.showInputDialog("Ingrese el número de línea:");
+
+        try {
+            // Intenta convertir la entrada a un número de línea.
+            int lineNumber = Integer.parseInt(input);
+
+            // Verifica si el número de línea está en un rango válido.
+            if (lineNumber > 0 && lineNumber <= jTextArea1.getLineCount()) {
+                // Calcula la posición del inicio de la línea.
+                int startOffset = jTextArea1.getLineStartOffset(lineNumber - 1);
+
+                // Establece el cursor en esa posición.
+                jTextArea1.setCaretPosition(startOffset);
+            } else {
+                // Muestra un mensaje de error si el número de línea no es válido.
+                JOptionPane.showMessageDialog(null, "Número de línea no válido");
+            }
+        } catch (NumberFormatException | BadLocationException e) {
+            // Captura excepciones si la entrada no es un número o hay problemas con la posición de la línea.
+            JOptionPane.showMessageDialog(null, "Ingrese un número válido");
+        }
+    }//GEN-LAST:event_IrAActionPerformed
+
+    private void ReemplazarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReemplazarActionPerformed
+        // Mostrar un cuadro de diálogo para obtener el texto a buscar y el texto de reemplazo
+        String buscar = JOptionPane.showInputDialog(this, "Buscar:");
+        if (buscar == null) {
+            // El usuario canceló la operación
+            return;
+        }
+
+        String reemplazar = JOptionPane.showInputDialog(this, "Reemplazar con:");
+        if (reemplazar == null) {
+            // El usuario canceló la operación
+            return;
+        }
+
+        // Obtener el texto actual del JTextArea
+        String textoActual = jTextArea1.getText();
+
+        // Realizar el reemplazo
+        String textoNuevo = textoActual.replace(buscar, reemplazar);
+
+        // Establecer el nuevo texto en el JTextArea
+        jTextArea1.setText(textoNuevo);
+    }//GEN-LAST:event_ReemplazarActionPerformed
+
+    private void BuscarLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarLastActionPerformed
+        buscarTexto(false);
+    }//GEN-LAST:event_BuscarLastActionPerformed
+
+    private void BuscarNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BuscarNextActionPerformed
+        buscarTexto(true);
+    }//GEN-LAST:event_BuscarNextActionPerformed
+
+    private void buscarTexto(boolean buscarSiguiente) {
+
+        String textoBusqueda = jTextArea1.getSelectedText();
+
+        if (textoBusqueda != null && !textoBusqueda.isEmpty()) {
+            // Obtén el documento del componente de texto
+            javax.swing.text.Document doc = jTextArea1.getDocument();
+            DefaultHighlighter.DefaultHighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(java.awt.Color.YELLOW);
+            Highlighter highlighter = jTextArea1.getHighlighter();
+
+            try {
+                // Elimina resaltes anteriores
+                highlighter.removeAllHighlights();
+
+                // Realiza la búsqueda en el documento
+                String contenido = doc.getText(0, doc.getLength());
+                int startIndex = buscarSiguiente ? lastIndex + 1 : lastIndex - 1;
+                int index = contenido.indexOf(textoBusqueda, startIndex);
+
+                if (index != -1) {
+                    // Resalta la ocurrencia encontrada
+                    highlighter.addHighlight(index, index + textoBusqueda.length(), highlightPainter);
+
+                    // Almacena el índice actual para la próxima búsqueda
+                    lastIndex = index;
+                } else {
+                    // Mensaje o lógica adicional si no se encuentra más texto
+                }
+            } catch (BadLocationException ex) {
+                // Maneja cualquier excepción que pueda ocurrir al manipular el documento del componente de texto
+                ex.printStackTrace();
+            }
+        } else {
+            // Mensaje o lógica adicional si no hay texto seleccionado
+        }
+    }
     private void AjusteLineaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AjusteLineaActionPerformed
         // Obtén el estado actual del ajuste de línea
         boolean ajusteLineaActivado = jTextArea1.getLineWrap();
@@ -529,14 +850,52 @@ public class Editor extends javax.swing.JFrame {
         jTextArea1.setLineWrap(!ajusteLineaActivado);
         jTextArea1.setWrapStyleWord(!ajusteLineaActivado);  // ajustar también por palabras
 
-        
     }//GEN-LAST:event_AjusteLineaActionPerformed
 
-    private void DeshacerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DeshacerActionPerformed
-        if (undoManager.canUndo()) {
-            undoManager.undo();
+    private void SendComentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SendComentsActionPerformed
+        try {
+            //
+            String mailto = "mailto:soporte@example.com?subject=Comentarios%20o%20Quejas";
+            Desktop.getDesktop().browse(new URI(mailto));
+        } catch (IOException | URISyntaxException ex) {
+            ex.printStackTrace();
         }
-    }//GEN-LAST:event_DeshacerActionPerformed
+    }//GEN-LAST:event_SendComentsActionPerformed
+
+    private void AcercaDeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AcercaDeActionPerformed
+        JOptionPane.showMessageDialog(this, "Bloc de Notas\nVersión 1.0\n\nDesarrollado por: Microsoft", "Acerca de", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_AcercaDeActionPerformed
+
+    private JPopupMenu createPopupMenu() {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem pegarItem = new JMenuItem("Pegar");
+        JMenuItem copiarItem = new JMenuItem("Copiar");
+        JMenuItem cortarItem = new JMenuItem("Cortar");
+        JMenuItem eliminarItem = new JMenuItem("Eliminar");
+
+        pegarItem.addActionListener((ActionEvent e) -> {
+            PegarActionPerformed(e);
+        });
+
+        copiarItem.addActionListener((ActionEvent e) -> {
+            CopiarActionPerformed(e);
+        });
+
+        cortarItem.addActionListener((ActionEvent e) -> {
+            CortarActionPerformed(e);
+        });
+
+        eliminarItem.addActionListener((ActionEvent e) -> {
+            EliminarActionPerformed(e);
+        });
+
+        popupMenu.add(pegarItem);
+        popupMenu.add(copiarItem);
+        popupMenu.add(cortarItem);
+        popupMenu.add(eliminarItem);
+
+        return popupMenu;
+    }
 
     /**
      * @param args the command line arguments
@@ -575,10 +934,17 @@ public class Editor extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem Abrir;
+    private javax.swing.JMenuItem AcercaDe;
     private javax.swing.JMenuItem AjusteLinea;
+    private javax.swing.JMenuItem Ayuda;
+    private javax.swing.JMenuItem Bing;
+    private javax.swing.JMenuItem Buscar;
+    private javax.swing.JMenuItem BuscarLast;
+    private javax.swing.JMenuItem BuscarNext;
     private javax.swing.JMenuItem ConfigPage;
     private javax.swing.JMenuItem Copiar;
     private javax.swing.JMenuItem Cortar;
+    private javax.swing.JMenuItem Date;
     private javax.swing.JMenuItem Deshacer;
     private javax.swing.JMenuItem Eliminar;
     private javax.swing.JMenuItem Exit;
@@ -586,23 +952,14 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenuItem Guardar;
     private javax.swing.JMenuItem GuardarComo;
     private javax.swing.JMenuItem Imprimir;
+    private javax.swing.JMenuItem IrA;
     private javax.swing.JMenuItem Nuevo;
     private javax.swing.JMenuItem Pegar;
+    private javax.swing.JMenuItem Reemplazar;
+    private javax.swing.JMenuItem SelectAll;
+    private javax.swing.JMenuItem SendComents;
     private javax.swing.JMenuItem VentanaNueva;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem14;
-    private javax.swing.JMenuItem jMenuItem15;
-    private javax.swing.JMenuItem jMenuItem16;
-    private javax.swing.JMenuItem jMenuItem17;
-    private javax.swing.JMenuItem jMenuItem18;
-    private javax.swing.JMenuItem jMenuItem19;
-    private javax.swing.JMenuItem jMenuItem20;
-    private javax.swing.JMenuItem jMenuItem21;
-    private javax.swing.JMenuItem jMenuItem22;
-    private javax.swing.JMenuItem jMenuItem23;
-    private javax.swing.JMenuItem jMenuItem24;
-    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
@@ -617,4 +974,9 @@ public class Editor extends javax.swing.JFrame {
     private javax.swing.JMenu mnuHelp;
     private javax.swing.JMenu mnuView;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
